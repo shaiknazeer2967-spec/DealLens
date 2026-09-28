@@ -1,0 +1,59 @@
+[
+  {
+    "company": "Northstar Health",
+    "industry": "Healthcare",
+    "deal_value": "$180,000",
+    "situation": "Pricing objection during procurement; compliance leader needs ROI proof.",
+    "lesson": "ROI evidence and an early compliance workshop helped convert a pricing objection into a business-case discussion.",
+    "outcome": "Won",
+    "created_at": "2026-08-11T10:00:00+00:00"
+  },
+  {
+    "company": "Vertex Finance",
+    "industry": "Financial Services",
+    "deal_value": "$320,000",
+    "situation": "Security review delayed a competitive deal and the economic buyer was not engaged.",
+    "lesson": "Align the economic buyer and security team on a shared timeline before the competitor defines the evaluation.",
+    "outcome": "Recovered",
+    "created_at": "2026-08-03T10:00:00+00:00"
+  },
+  {
+    "company": "Cobalt Systems",
+    "industry": "Healthcare",
+    "deal_value": "$140,000",
+    "situation": "Procurement requested a discount after stakeholders questioned implementation value.",
+    "lesson": "A tailored implementation plan plus measurable time-to-value protects price and restores confidence.",
+    "outcome": "Won",
+    "created_at": "2026-07-24T10:00:00+00:00"
+  },
+  {
+    "company": "apple",
+    "deal_value": "900000",
+    "customer": "apple products",
+    "industry": "service",
+    "situation": "i would like to lower the price of producst , that would be the better for us",
+    "lesson": "Quantify business value with an ROI narrative before discussing discounting.",
+    "outcome": "Learning captured",
+    "created_at": "2026-09-28T06:26:49.139915+00:00"
+  },
+  {
+    "company": "MedNova Health",
+    "deal_value": "$250,000",
+    "customer": "medNova Health",
+    "industry": "Healthcare",
+    "situation": "The procurement team says our price is higher than competing vendors.\r\nTheir compliance lead needs evidence that we meet healthcare security requirements.\r\nThe economic buyer has not joined the last two meetings, and they want a clear ROI justification before approving the purchase.",
+    "lesson": "Quantify business value with an ROI narrative before discussing discounting.",
+    "outcome": "Learning captured",
+    "created_at": "2026-09-28T06:30:58.331495+00:00"
+  },
+  {
+    "company": "medNova",
+    "deal_value": "$275000",
+    "customer": "medNova Pharma",
+    "industry": "Health care",
+    "situation": "The procurement team says our price is higher than competing vendors. Their compliance lead needs evidence that we meet healthcare security requirements. The economic buyer has not joined the last two meetings, and they want a clear ROI justification before approving the purchase.",
+    "lesson": "Quantify business value with an ROI narrative before discussing discounting.",
+    "outcome": "Learning captured",
+    "created_at": "2026-09-28T06:52:43.752382+00:00"
+  }
+]

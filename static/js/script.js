@@ -1,0 +1,21 @@
+// DealLens client-side enhancements
+document.addEventListener('DOMContentLoaded', function () {
+    // Auto-resize textareas
+    document.querySelectorAll('textarea').forEach(function (el) {
+        el.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+            var target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+});
