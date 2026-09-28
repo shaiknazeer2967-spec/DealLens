@@ -1,3 +1,4 @@
 Flask>=3.0,<4.0
 python-dotenv>=1.0,<2.0
 hindsight-client>=0.6
+gunicorn>=21.0,<22.0 
