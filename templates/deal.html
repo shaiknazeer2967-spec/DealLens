@@ -1,1 +1,164 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ deal.company }} | DealLens</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head><body><nav><a class="brand" href="/">Deal<span>Lens</span></a><a href="/hindsight">Memory Studio <b>{{ memory_count }}</b></a></nav><main class="page"><a class="back" href="/">← New analysis</a><div class="title"><div><p class="eyebrow">DEAL INTELLIGENCE BRIEF</p><h1>{{ deal.company }}</h1><p>{{ deal.industry }} · {{ deal.deal_value }} · {{ deal.customer }}</p></div><div class="score"><strong>{{ analysis.health }}</strong><span>health score</span></div></div><section class="twocol"><article class="panel pad"><p class="eyebrow">RISK SIGNALS</p><h2>{{ analysis.risk }} risk</h2>{% for risk in analysis.risks %}<span class="chip">{{ risk }}</span>{% endfor %}</article><article class="panel pad"><p class="eyebrow">RECOMMENDED NEXT MOVES</p>{% for action in analysis.actions %}<p class="action">{{ loop.index }}. {{ action }}</p>{% endfor %}</article></section><section class="memory"><div class="head"><div><p class="eyebrow">OFFICIAL HINDSIGHT MEMORY TRACE</p><h2>Hindsight informed this decision</h2></div><span class="match">{{ recalled|length }} facts recalled · {{ analysis.confidence }} confidence</span></div><div class="trace"><div><small>01 · RETAINED INPUT</small><strong>Meeting-note evidence</strong><p>{{ deal.situation }}</p></div><i>→</i><div><small>02 · HINDSIGHT RECALL</small><strong>Retrieved facts</strong><p>{{ recalled|length }} relevant memories from bank</p></div><i>→</i><div><small>03 · RETAIN</small><strong>New interaction saved</strong><p>Stored in Hindsight bank: deallens-demo</p></div></div><p class="impact"><b>Memory impact:</b> {{ analysis.memory_impact }}</p>{% if recalled %}{% for item in recalled %}<article class="memoryitem"><div><span class="match">{{ item.type }}</span><h3>{{ item.company }}</h3><p>{{ item.context }}</p><p class="lesson">{{ item.why_recalled }}</p></div><p>“{{ item.text }}”</p></article>{% endfor %}{% else %}<p class="empty">No relevant Hindsight facts were found. This interaction has now been retained for a future deal.</p>{% endif %}</section><section class="retained"><span>✓</span><div><p class="eyebrow">RETAINED IN HINDSIGHT</p><h3>New sales interaction saved</h3><p>{{ retained.lesson }}</p></div><a href="/hindsight">View memory bank →</a></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ deal.company }} | DealLens</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <nav>
+    <a class="brand" href="/">Deal<span>Lens</span></a>
+    <a href="/hindsight">Hindsight Memory <b>{{ memory_count }}</b></a>
+  </nav>
+  <main class="page">
+    <a class="back" href="/">← New analysis</a>
+    <p class="flow-banner">Current deal → Similar past deals → What happened before → Lessons from history → Recommended action</p>
+
+    <section class="flow-block current-block" id="current-deal">
+      <div class="flow-label"><span>01</span> Current deal</div>
+      <div class="title">
+        <div>
+          <p class="eyebrow">LIVE SITUATION — NOT HISTORY</p>
+          <h1>{{ deal.company }}</h1>
+          <p>{{ deal.industry }} · {{ deal.deal_value }} · {{ deal.customer }}</p>
+        </div>
+        <div class="score"><strong>{{ analysis.health }}</strong><span>health score</span></div>
+      </div>
+      <article class="panel pad glass">
+        <p class="eyebrow">WHAT THIS CUSTOMER IS SAYING</p>
+        <p class="situation">{{ deal.situation }}</p>
+        <div class="meta-row">
+          {% if deal.objections %}<span class="chip">Objection: {{ deal.objections }}</span>{% endif %}
+          {% if deal.competitor %}<span class="chip">Competitor: {{ deal.competitor }}</span>{% endif %}
+          {% if deal.requirements %}<span class="chip">Needs: {{ deal.requirements }}</span>{% endif %}
+          {% if deal.negotiation %}<span class="chip">Negotiation: {{ deal.negotiation }}</span>{% endif %}
+          <span class="chip">Outcome: {{ deal.outcome or 'Open' }}</span>
+        </div>
+        {% for risk in analysis.risks %}<span class="chip">{{ risk }}</span>{% endfor %}
+      </article>
+    </section>
+
+    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+    <section class="flow-block history-block" id="similar-deals">
+      <div class="flow-label"><span>02</span> Similar past deals</div>
+      <div class="head">
+        <div>
+          <p class="eyebrow">RECALL</p>
+          <h2>Memories that match this situation</h2>
+        </div>
+        <span class="match">{{ recalled|length }} recalled · {{ analysis.confidence }} confidence</span>
+      </div>
+      {% if recalled %}
+      <div class="card-grid">
+        {% for item in recalled %}
+        <article class="panel pad glass similar-card">
+          <span class="match">{{ item.similarity or '—' }}% similar</span>
+          <h3>{{ item.company }}</h3>
+          <p class="muted">{{ item.customer }} · {{ item.industry }} · {{ item.deal_value }}</p>
+          <p><strong>Why similar:</strong> {{ item.why_similar }}</p>
+          <p class="muted">{{ item.objections or item.situation }}</p>
+          <p class="lesson">Outcome: {{ item.outcome or 'Recorded' }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty">No close historical match yet. This deal has been retained so the next similar situation can recall it.</p>
+      {% endif %}
+    </section>
+
+    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+    <section class="flow-block history-block" id="what-happened">
+      <div class="flow-label"><span>03</span> What happened before</div>
+      <p class="eyebrow">REFLECT — EVENTS, NOT JUST NAMES</p>
+      <h2>How those deals actually ended</h2>
+      {% if analysis.what_happened %}
+      <div class="timeline">
+        {% for item in analysis.what_happened %}
+        <article class="timeline-item panel pad glass">
+          <small>{{ item.outcome }}</small>
+          <h3>{{ item.company }}</h3>
+          <p>{{ item.story }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty">No prior outcomes to replay yet.</p>
+      {% endif %}
+    </section>
+
+    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+    <section class="flow-block history-block" id="lessons">
+      <div class="flow-label"><span>04</span> Lessons from history</div>
+      <p class="eyebrow">PATTERNS EXTRACTED FROM MEMORY</p>
+      <h2>What worked, what failed, what to watch</h2>
+      <div class="card-grid">
+        {% for lesson in analysis.lessons %}
+        <article class="panel pad glass lesson-card">
+          <p class="eyebrow">{{ lesson.title }}</p>
+          <p>{{ lesson.detail }}</p>
+          <p class="muted">Evidence: {{ lesson.source }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="flow-arrow" aria-hidden="true">↓</div>
+
+    <section class="flow-block decide-block" id="decide">
+      <div class="flow-label"><span>05</span> Recommended action</div>
+      <p class="eyebrow">DECIDE — PATTERN-BASED, NOT GUARANTEED</p>
+      <h2>Decision support for {{ deal.company }}</h2>
+      <article class="panel pad glass insight-card">
+        <p class="impact"><b>Insight:</b> {{ analysis.decision.headline }}</p>
+        <div class="decide-grid">
+          <div>
+            <p class="eyebrow">Historical evidence</p>
+            {% for row in analysis.decision.evidence %}
+            <p class="action">{{ row }}</p>
+            {% else %}
+            <p class="muted">No recalled evidence yet.</p>
+            {% endfor %}
+          </div>
+          <div>
+            <p class="eyebrow">Detected pattern</p>
+            <p>{{ analysis.decision.pattern }}</p>
+            <p class="eyebrow">Suggested action</p>
+            <p>{{ analysis.decision.suggested_action }}</p>
+            <p class="eyebrow">Risk / concern</p>
+            <p>{{ analysis.decision.risk }}</p>
+            <p class="eyebrow">Why this suggestion</p>
+            <p>{{ analysis.decision.reason }}</p>
+          </div>
+        </div>
+        <p class="disclaimer">{{ analysis.decision.disclaimer }}</p>
+      </article>
+      <section class="twocol" style="margin-top:18px">
+        <article class="panel pad">
+          <p class="eyebrow">RISK SIGNALS</p>
+          <h2>{{ analysis.risk }} risk</h2>
+          {% for risk in analysis.risks %}<span class="chip">{{ risk }}</span>{% endfor %}
+        </article>
+        <article class="panel pad">
+          <p class="eyebrow">NEXT MOVES FROM THIS PATTERN</p>
+          {% for action in analysis.actions %}<p class="action">{{ loop.index }}. {{ action }}</p>{% endfor %}
+        </article>
+      </section>
+    </section>
+
+    <section class="retained">
+      <span>✓</span>
+      <div>
+        <p class="eyebrow">RETAINED FOR THE NEXT DEAL</p>
+        <h3>This interaction is now in hindsight memory</h3>
+        <p>{{ retained.lesson }}</p>
+      </div>
+      <a href="/hindsight">Open Hindsight Memory →</a>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

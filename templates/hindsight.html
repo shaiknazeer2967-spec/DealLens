@@ -1,1 +1,138 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Memory Studio | DealLens</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head><body><nav><a class="brand" href="/">Deal<span>Lens</span></a><a href="/hindsight">Memory Studio <b>{{ memory_count }}</b></a></nav><main class="page"><p class="eyebrow">OFFICIAL HINDSIGHT CLOUD</p><h1>Memory Studio</h1><p class="lead">Inspectable facts extracted and stored by the DealLens Hindsight memory bank.</p>{% if not memory_ready %}<section class="panel pad"><h2>Hindsight is not connected</h2><p>{{ memory_error }}</p></section>{% else %}<section class="layers">{% for title, text in [('Working','The meeting note used in the current analysis.'),('Episodic','Specific deal experiences retained from sales interactions.'),('Semantic','Facts and relationships Hindsight extracts for future recall.')] %}<article class="panel pad"><small>0{{ loop.index }}</small><h2>{{ title }}</h2><p>{{ text }}</p></article>{% endfor %}</section><section class="panel memories"><div class="head"><div><p class="eyebrow">HINDSIGHT BANK: DEALLENS-DEMO</p><h2>{{ memory_count }} retained facts</h2></div><a class="outline" href="/">Analyze a deal</a></div>{% for item in memories %}<article class="memoryitem"><div><span class="match">{{ item.type }}</span><h3>Hindsight memory</h3><p>{{ item.context }}</p></div><p>{{ item.text }}</p></article>{% else %}<p class="empty">The bank is empty. Analyze a deal to retain the first sales interaction.</p>{% endfor %}</section>{% endif %}</main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hindsight Memory | DealLens</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <nav>
+    <a class="brand" href="/">Deal<span>Lens</span></a>
+    <a href="/hindsight">Hindsight Memory <b>{{ memory_count }}</b></a>
+  </nav>
+  <main class="page">
+    <p class="eyebrow">HINDSIGHT MEMORY</p>
+    <h1>Why the system remembers.</h1>
+    <p class="lead">Past deals are stored as evidence. When a new deal is analyzed, DealLens recalls similar memories, names the pattern, and shows the deals that produced the insight.</p>
+    <p class="flow-banner">Past deals → Recall → Patterns → Lessons → Current deal → Better decision</p>
+    {% if memory_error %}
+    <div class="error"><strong>Cloud status</strong><br>{{ memory_error }}</div>
+    {% endif %}
+
+    <section class="flow-block history-block">
+      <div class="flow-label"><span>01</span> Past deals</div>
+      <div class="head">
+        <div>
+          <p class="eyebrow">RETAINED MEMORY</p>
+          <h2>{{ memory_count }} stored experiences</h2>
+        </div>
+        <a class="outline" href="/">Analyze a deal</a>
+      </div>
+      <div class="timeline">
+        {% for item in memories %}
+        <article class="timeline-item panel pad glass">
+          <small>{{ item.created_at or item.outcome or 'Memory' }} · {{ item.outcome or 'Recorded' }}</small>
+          <h3>{{ item.company or 'Stored deal' }}</h3>
+          <p class="muted">{{ item.customer }} · {{ item.industry }} · {{ item.deal_value }}</p>
+          <p>{{ item.situation or item.text }}</p>
+          {% if item.lesson %}<p class="lesson">{{ item.lesson }}</p>{% endif %}
+        </article>
+        {% else %}
+        <p class="empty">No past deals stored yet. Analyze a deal to retain the first memory.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="flow-block history-block">
+      <div class="flow-label"><span>02</span> Similar deals found</div>
+      <p class="eyebrow">LAST RECALL</p>
+      <h2>What matched the current deal</h2>
+      {% if similar_deals %}
+      <div class="card-grid">
+        {% for item in similar_deals %}
+        <article class="panel pad glass similar-card">
+          <span class="match">{{ item.similarity or '—' }}% similar</span>
+          <h3>{{ item.company }}</h3>
+          <p><strong>Why this was recalled:</strong> {{ item.why_similar }}</p>
+          <p class="muted">Outcome: {{ item.outcome }}</p>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty">Analyze a current deal to see which stored experiences were recalled and why.</p>
+      {% endif %}
+    </section>
+
+    <section class="flow-block history-block">
+      <div class="flow-label"><span>03</span> Historical patterns</div>
+      <div class="card-grid">
+        {% for pattern in patterns %}
+        <article class="panel pad glass lesson-card">
+          <p class="eyebrow">{{ pattern.name }} · {{ pattern.count }} deals</p>
+          <p>{{ pattern.statement }}</p>
+          <p class="muted">Supporting deals: {{ pattern.evidence|join(', ') }}</p>
+        </article>
+        {% else %}
+        <p class="empty">Patterns appear after similar deals share an objection or competitor.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="twocol">
+      <article class="flow-block history-block">
+        <div class="flow-label"><span>04</span> Successful strategies</div>
+        {% for item in successful_strategies %}
+        <div class="panel pad glass" style="margin-bottom:12px">
+          <p class="lesson">{{ item.strategy }}</p>
+          <p class="muted">{{ item.company }} · {{ item.outcome }} — {{ item.why }}</p>
+        </div>
+        {% else %}
+        <p class="empty">Wins in memory will show the strategies that accompanied them.</p>
+        {% endfor %}
+      </article>
+      <article class="flow-block history-block">
+        <div class="flow-label"><span>05</span> Failed strategies</div>
+        {% for item in failed_strategies %}
+        <div class="panel pad glass" style="margin-bottom:12px">
+          <p class="lesson">{{ item.strategy }}</p>
+          <p class="muted">{{ item.company }} · {{ item.outcome }} — {{ item.why }}</p>
+        </div>
+        {% else %}
+        <p class="empty">Losses in memory will show what did not work.</p>
+        {% endfor %}
+      </article>
+    </section>
+
+    <section class="flow-block history-block">
+      <div class="flow-label"><span>06</span> Lessons learned</div>
+      <div class="card-grid">
+        {% for lesson in lessons %}
+        <article class="panel pad glass lesson-card">
+          <p class="eyebrow">{{ lesson.title }}</p>
+          <p>{{ lesson.detail }}</p>
+          <p class="muted">From: {{ lesson.source }}</p>
+        </article>
+        {% else %}
+        <p class="empty">Lessons are written when recalled deals have outcomes.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="flow-block decide-block">
+      <div class="flow-label"><span>07</span> Current deal insights</div>
+      {% if current_insights and current_insights.deal %}
+      <article class="panel pad glass insight-card">
+        <p class="eyebrow">{{ current_insights.deal.company }}</p>
+        <p class="impact"><b>Insight:</b> {{ current_insights.decision.headline }}</p>
+        <p><strong>Suggested action:</strong> {{ current_insights.decision.suggested_action }}</p>
+        <p class="disclaimer">{{ current_insights.decision.disclaimer }}</p>
+        <p class="muted">Open the analysis page after submitting a deal to walk the full evidence trail.</p>
+      </article>
+      {% else %}
+      <p class="empty">After you analyze a deal, this section shows the insight and the historical pattern behind it.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

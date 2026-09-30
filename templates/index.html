@@ -1,1 +1,58 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DealLens</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head><body><nav><a class="brand" href="/">Deal<span>Lens</span></a><a href="/hindsight">Memory Studio <b>{{ memory_count }}</b></a></nav><main class="hero"><p class="eyebrow">HINDSIGHT-POWERED SALES INTELLIGENCE</p><h1>Every deal gets<br><em>smarter with experience.</em></h1><p class="lead">Turn fragmented deal signals into recommendations your team can trust—and visibly show the memories that informed them.</p><section class="panel form-panel"><h2>Analyze a live deal</h2><p>Paste meeting notes or deal context. The agent records its source, recalls comparable experiences, explains their impact, and retains a reusable lesson.</p>{% if memory_error %}<div class="error"><strong>Hindsight connection needed</strong><br>{{ memory_error }}<br><small>Check `.env`, install `requirements.txt`, then stop and restart Flask.</small></div>{% endif %}<form action="/deal" method="post"><div class="grid"><label>Company<input name="company" value="{{ form_data.get('company', '') }}" placeholder="e.g. Alpine Health" required></label><label>Deal value<input name="deal_value" value="{{ form_data.get('deal_value', '') }}" placeholder="e.g. $250,000" required></label><label>Customer / account<input name="customer" value="{{ form_data.get('customer', '') }}" placeholder="e.g. Alpine Health" required></label><label>Industry<input name="industry" value="{{ form_data.get('industry', '') }}" placeholder="e.g. Healthcare" required></label></div><label>Meeting notes / current deal situation<textarea name="situation" placeholder="Include objections, stakeholder concerns, competitors, or decision blockers..." required>{{ form_data.get('situation', '') }}</textarea></label><button>Analyze with Hindsight →</button></form></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DealLens – Intelligence Behind Every Deal</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <nav>
+    <a class="brand" href="/">Deal<span>Lens</span></a>
+    <a href="/hindsight">Hindsight Memory <b>{{ memory_count }}</b></a>
+  </nav>
+  <main class="hero">
+    <p class="eyebrow">INTELLIGENCE BEHIND EVERY DEAL</p>
+    <h1>Past deals make the<br><em>next decision clearer.</em></h1>
+    <p class="lead">DealLens remembers what happened in previous deals—then recalls similar experiences, extracts lessons, and supports the current decision. It does not pretend history is a guarantee.</p>
+    <ol class="cycle">
+      <li><span>01</span>Retain</li>
+      <li><span>02</span>Recall</li>
+      <li><span>03</span>Reflect</li>
+      <li><span>04</span>Decide</li>
+    </ol>
+    <section class="panel form-panel">
+      <h2>Analyze a current deal</h2>
+      <p>Enter the live situation. DealLens searches stored history, shows why past deals are similar, and recommends an action with the evidence behind it.</p>
+      {% if memory_error %}
+      <div class="error"><strong>Hindsight cloud note</strong><br>{{ memory_error }}<br><small>Local memory still runs. Cloud recall needs a valid `.env` key and a restart.</small></div>
+      {% endif %}
+      <form action="/deal" method="post">
+        <div class="grid">
+          <label>Company<input name="company" value="{{ form_data.get('company', '') }}" placeholder="e.g. Company C" required></label>
+          <label>Deal value<input name="deal_value" value="{{ form_data.get('deal_value', '') }}" placeholder="e.g. $250,000" required></label>
+          <label>Customer / account<input name="customer" value="{{ form_data.get('customer', '') }}" placeholder="e.g. Company C procurement" required></label>
+          <label>Industry<input name="industry" value="{{ form_data.get('industry', '') }}" placeholder="e.g. Healthcare" required></label>
+        </div>
+        <div class="grid">
+          <label>Objections<input name="objections" value="{{ form_data.get('objections', '') }}" placeholder="e.g. Price, implementation time"></label>
+          <label>Competitor<input name="competitor" value="{{ form_data.get('competitor', '') }}" placeholder="e.g. cheaper alternative"></label>
+          <label>Customer requirements<input name="requirements" value="{{ form_data.get('requirements', '') }}" placeholder="e.g. ROI proof, 8-week go-live"></label>
+          <label>Outcome (if known)
+            <select name="outcome">
+              <option value="Open" {% if form_data.get('outcome', 'Open') == 'Open' %}selected{% endif %}>Open — current deal</option>
+              <option value="Won" {% if form_data.get('outcome') == 'Won' %}selected{% endif %}>Won</option>
+              <option value="Lost" {% if form_data.get('outcome') == 'Lost' %}selected{% endif %}>Lost</option>
+              <option value="Stalled" {% if form_data.get('outcome') == 'Stalled' %}selected{% endif %}>Stalled</option>
+            </select>
+          </label>
+        </div>
+        <label>Negotiation notes<input name="negotiation" value="{{ form_data.get('negotiation', '') }}" placeholder="What has already been offered or refused?"></label>
+        <label>Meeting notes / current deal situation<textarea name="situation" placeholder="Include objections, competitor pressure, implementation concerns, and decision blockers..." required>{{ form_data.get('situation', '') }}</textarea></label>
+        <button type="submit">Recall history and analyze →</button>
+      </form>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
