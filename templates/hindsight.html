@@ -1,138 +1,156 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Hindsight Memory | DealLens</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <nav>
-    <a class="brand" href="/">Deal<span>Lens</span></a>
-    <a href="/hindsight">Hindsight Memory <b>{{ memory_count }}</b></a>
-  </nav>
-  <main class="page">
-    <p class="eyebrow">HINDSIGHT MEMORY</p>
-    <h1>Why the system remembers.</h1>
-    <p class="lead">Past deals are stored as evidence. When a new deal is analyzed, DealLens recalls similar memories, names the pattern, and shows the deals that produced the insight.</p>
-    <p class="flow-banner">Past deals → Recall → Patterns → Lessons → Current deal → Better decision</p>
-    {% if memory_error %}
-    <div class="error"><strong>Cloud status</strong><br>{{ memory_error }}</div>
-    {% endif %}
+{% extends "base.html" %}
+{% block title %}Hindsight Memory | DealLens{% endblock %}
+{% block content %}
+  <header class="page-head">
+    <p class="kicker">Hindsight Memory</p>
+    <h1>What past deals teach the current decision</h1>
+    <p>Retain stores deal records. Recall retrieves similar ones. Reflect extracts lessons. None of the rows below are simulated for display.</p>
+  </header>
 
-    <section class="flow-block history-block">
-      <div class="flow-label"><span>01</span> Past deals</div>
-      <div class="head">
-        <div>
-          <p class="eyebrow">RETAINED MEMORY</p>
-          <h2>{{ memory_count }} stored experiences</h2>
-        </div>
-        <a class="outline" href="/">Analyze a deal</a>
-      </div>
-      <div class="timeline">
-        {% for item in memories %}
-        <article class="timeline-item panel pad glass">
-          <small>{{ item.created_at or item.outcome or 'Memory' }} · {{ item.outcome or 'Recorded' }}</small>
-          <h3>{{ item.company or 'Stored deal' }}</h3>
-          <p class="muted">{{ item.customer }} · {{ item.industry }} · {{ item.deal_value }}</p>
-          <p>{{ item.situation or item.text }}</p>
-          {% if item.lesson %}<p class="lesson">{{ item.lesson }}</p>{% endif %}
-        </article>
+  {% if memory_error %}
+  <div class="notice"><strong>Cloud status</strong><br>{{ memory_error }}</div>
+  {% endif %}
+
+  <section class="memory-overview hindsight-stages" aria-label="Hindsight Memory workflow">
+    <ol class="memory-stages">
+      <li class="memory-stage">
+        <span class="stage-index">01</span>
+        <p class="stage-label">RETAIN · Store experience</p>
+        <h3>{{ memories|length }} saved deal{{ 's' if memories|length != 1 else '' }}</h3>
+        <p>Stored deal records and outcomes are shown below.</p>
+      </li>
+      <li class="memory-stage">
+        <span class="stage-index">02</span>
+        <p class="stage-label">RECALL · Find experience</p>
+        <h3>{{ similar_deals|length }} recalled</h3>
+        <p>{% if similar_deals %}Relevant records from the latest analysis.{% else %}Analyze a deal to see relevant records returned by memory.{% endif %}</p>
+      </li>
+      <li class="memory-stage">
+        <span class="stage-index">03</span>
+        <p class="stage-label">REFLECT · Extract lessons</p>
+        <h3>{{ lessons|length }} lesson notes</h3>
+        <p>Lessons and patterns are connected to stored deal records below.</p>
+      </li>
+      <li class="memory-stage">
+        <span class="stage-index">04</span>
+        <p class="stage-label">RECOMMEND · Apply the lesson</p>
+        {% if current_insights and current_insights.decision %}
+        <h3>{{ current_insights.deal.company or "Latest analysis" }}</h3>
+        <p>{{ current_insights.decision.suggested_action }}</p>
         {% else %}
-        <p class="empty">No past deals stored yet. Analyze a deal to retain the first memory.</p>
-        {% endfor %}
-      </div>
-    </section>
+        <h3>Ready for an analysis</h3>
+        <p>Recommendations appear here after a deal is analyzed.</p>
+        {% endif %}
+      </li>
+    </ol>
+  </section>
 
-    <section class="flow-block history-block">
-      <div class="flow-label"><span>02</span> Similar deals found</div>
-      <p class="eyebrow">LAST RECALL</p>
-      <h2>What matched the current deal</h2>
-      {% if similar_deals %}
-      <div class="card-grid">
-        {% for item in similar_deals %}
-        <article class="panel pad glass similar-card">
-          <span class="match">{{ item.similarity or '—' }}% similar</span>
-          <h3>{{ item.company }}</h3>
-          <p><strong>Why this was recalled:</strong> {{ item.why_similar }}</p>
-          <p class="muted">Outcome: {{ item.outcome }}</p>
-        </article>
-        {% endfor %}
+  <div class="stack">
+    <article class="card">
+      <h2>Retained memories ({{ memories|length }})</h2>
+      {% if memories %}
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>Deal</th><th>Outcome</th><th>What was stored</th><th>Lesson</th></tr>
+          </thead>
+          <tbody>
+            {% for item in memories %}
+            <tr>
+              <td>{{ item.company or "Stored deal" }}<div class="muted">{{ item.industry }} · {{ item.deal_value }}</div></td>
+              <td>{{ item.outcome or "Recorded" }}</td>
+              <td>{{ item.situation or item.text }}</td>
+              <td>{{ item.lesson or "—" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
       {% else %}
-      <p class="empty">Analyze a current deal to see which stored experiences were recalled and why.</p>
+      <p class="empty">No past deals stored yet.</p>
       {% endif %}
-    </section>
+    </article>
 
-    <section class="flow-block history-block">
-      <div class="flow-label"><span>03</span> Historical patterns</div>
-      <div class="card-grid">
+    <article class="card">
+      <h2>Last recall</h2>
+      <p class="hint">Filled after you analyze a current deal in this app session.</p>
+      {% if similar_deals %}
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>Deal</th><th>Similarity</th><th>Why recalled</th><th>Outcome</th></tr>
+          </thead>
+          <tbody>
+            {% for item in similar_deals %}
+            <tr>
+              <td>{{ item.company }}</td>
+              <td>{{ item.similarity or "—" }}{% if item.similarity %}%{% endif %}</td>
+              <td>{{ item.why_similar }}</td>
+              <td>{{ item.outcome }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="empty">Analyze a current deal to see which stored experiences were recalled.</p>
+      {% endif %}
+    </article>
+
+    <article class="card">
+      <h2>Patterns taken from memory</h2>
+      <div class="alert-list">
         {% for pattern in patterns %}
-        <article class="panel pad glass lesson-card">
-          <p class="eyebrow">{{ pattern.name }} · {{ pattern.count }} deals</p>
+        <div class="alert-item">
+          <strong>{{ pattern.name }}</strong> <span class="muted">· {{ pattern.count }} deals</span>
           <p>{{ pattern.statement }}</p>
-          <p class="muted">Supporting deals: {{ pattern.evidence|join(', ') }}</p>
-        </article>
+          <p>Supporting deals: {{ pattern.evidence|join(', ') }}</p>
+        </div>
         {% else %}
         <p class="empty">Patterns appear after similar deals share an objection or competitor.</p>
         {% endfor %}
       </div>
-    </section>
+    </article>
 
-    <section class="twocol">
-      <article class="flow-block history-block">
-        <div class="flow-label"><span>04</span> Successful strategies</div>
-        {% for item in successful_strategies %}
-        <div class="panel pad glass" style="margin-bottom:12px">
-          <p class="lesson">{{ item.strategy }}</p>
-          <p class="muted">{{ item.company }} · {{ item.outcome }} — {{ item.why }}</p>
+    <section class="split">
+      <article class="card">
+        <h2>Successful strategies</h2>
+        <div class="alert-list">
+          {% for item in successful_strategies %}
+          <div class="alert-item">
+            <strong>{{ item.company }}</strong> <span class="badge badge-won">{{ item.outcome }}</span>
+            <p>{{ item.strategy }}</p>
+          </div>
+          {% else %}
+          <p class="empty">Wins in memory will show the strategies stored with them.</p>
+          {% endfor %}
         </div>
-        {% else %}
-        <p class="empty">Wins in memory will show the strategies that accompanied them.</p>
-        {% endfor %}
       </article>
-      <article class="flow-block history-block">
-        <div class="flow-label"><span>05</span> Failed strategies</div>
-        {% for item in failed_strategies %}
-        <div class="panel pad glass" style="margin-bottom:12px">
-          <p class="lesson">{{ item.strategy }}</p>
-          <p class="muted">{{ item.company }} · {{ item.outcome }} — {{ item.why }}</p>
+      <article class="card">
+        <h2>Failed strategies</h2>
+        <div class="alert-list">
+          {% for item in failed_strategies %}
+          <div class="alert-item">
+            <strong>{{ item.company }}</strong> <span class="badge badge-lost">{{ item.outcome }}</span>
+            <p>{{ item.strategy }}</p>
+          </div>
+          {% else %}
+          <p class="empty">Losses in memory will show what did not work.</p>
+          {% endfor %}
         </div>
-        {% else %}
-        <p class="empty">Losses in memory will show what did not work.</p>
-        {% endfor %}
       </article>
     </section>
 
-    <section class="flow-block history-block">
-      <div class="flow-label"><span>06</span> Lessons learned</div>
-      <div class="card-grid">
-        {% for lesson in lessons %}
-        <article class="panel pad glass lesson-card">
-          <p class="eyebrow">{{ lesson.title }}</p>
-          <p>{{ lesson.detail }}</p>
-          <p class="muted">From: {{ lesson.source }}</p>
-        </article>
-        {% else %}
-        <p class="empty">Lessons are written when recalled deals have outcomes.</p>
-        {% endfor %}
-      </div>
-    </section>
-
-    <section class="flow-block decide-block">
-      <div class="flow-label"><span>07</span> Current deal insights</div>
+    <article class="card">
+      <h2>Current deal insight</h2>
       {% if current_insights and current_insights.deal %}
-      <article class="panel pad glass insight-card">
-        <p class="eyebrow">{{ current_insights.deal.company }}</p>
-        <p class="impact"><b>Insight:</b> {{ current_insights.decision.headline }}</p>
-        <p><strong>Suggested action:</strong> {{ current_insights.decision.suggested_action }}</p>
-        <p class="disclaimer">{{ current_insights.decision.disclaimer }}</p>
-        <p class="muted">Open the analysis page after submitting a deal to walk the full evidence trail.</p>
-      </article>
+      <p class="kicker">{{ current_insights.deal.company }}</p>
+      <p>{{ current_insights.decision.headline }}</p>
+      <p><strong>Suggested action:</strong> {{ current_insights.decision.suggested_action }}</p>
+      <p class="hint">{{ current_insights.decision.disclaimer }}</p>
       {% else %}
       <p class="empty">After you analyze a deal, this section shows the insight and the historical pattern behind it.</p>
       {% endif %}
-    </section>
-  </main>
-</body>
-</html>
+    </article>
+  </div>
+{% endblock %}

@@ -8,13 +8,14 @@ the dashboard still work for a demo if the API is unavailable.
 import asyncio
 import json
 import os
+import re
 from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from agent.analysis import active_signal_names, detect_signals
+from agent.analysis import SIGNAL_LABELS, active_signal_names, detect_signals
 
 load_dotenv()
 
@@ -151,6 +152,31 @@ class HindsightMemory:
                     _run_async(client.aclose())
         return items
 
+    def get(self, document_id):
+        """Return one locally stored deal record, if present."""
+        return next((item for item in self._load_local() if item.get("document_id") == document_id), None)
+
+    def record_outcome(self, document_id, outcome, lesson, expectation_gap):
+        """Persist confirmed post-deal facts without overwriting the original prediction."""
+        allowed = {"Won", "Lost", "Stalled", "Recovered"}
+        if outcome not in allowed:
+            raise ValueError("Select a confirmed outcome: Won, Lost, Stalled, or Recovered.")
+        lesson = (lesson or "").strip()
+        if not lesson:
+            raise ValueError("Please record the lesson learned from the actual outcome.")
+        items = self._load_local()
+        for item in items:
+            if item.get("document_id") == document_id:
+                item["actual_outcome"] = outcome
+                item["actual_lesson"] = lesson
+                item["expectation_gap"] = (expectation_gap or "").strip()
+                item["outcome"] = outcome
+                item["lesson"] = lesson
+                item["outcome_recorded_at"] = datetime.now(timezone.utc).isoformat()
+                self._write_local(items)
+                return item
+        raise KeyError("Deal record not found.")
+
     def dashboard_context(self):
         """Aggregate RETAIN/RECALL/REFLECT views for the Hindsight Memory page."""
         past = self.all()
@@ -175,6 +201,98 @@ class HindsightMemory:
             ],
             "current_insights": brief,
         }
+
+    def overview_stats(self):
+        """KPI cards for the Overview page, derived only from retained records."""
+        past = self.all()
+        won = sum(1 for item in past if self._is_win(item.get("outcome")))
+        lost = sum(1 for item in past if self._is_loss(item.get("outcome")))
+        amounts = []
+        unparsed = 0
+        high_risk = 0
+        alerts = []
+        for item in past:
+            parsed = self._parse_money(item.get("deal_value"))
+            if parsed is None:
+                if (item.get("deal_value") or "").strip():
+                    unparsed += 1
+            else:
+                amounts.append(parsed)
+            risk = self.estimate_risk(item)
+            if risk == "High":
+                high_risk += 1
+            if self._is_loss(item.get("outcome")) or risk in ("High", "Medium"):
+                alerts.append({
+                    "company": item.get("company") or "Stored deal",
+                    "outcome": item.get("outcome") or "Unknown",
+                    "risk": risk,
+                    "detail": (item.get("objections") or item.get("situation") or "").strip(),
+                })
+        recent = []
+        for item in sorted(past, key=lambda row: row.get("created_at") or "", reverse=True)[:6]:
+            view = dict(item)
+            view["risk"] = self.estimate_risk(item)
+            recent.append(view)
+        alerts.sort(key=lambda row: (0 if row["risk"] == "High" else 1 if row["risk"] == "Medium" else 2, row["company"]))
+        return {
+            "total": len(past),
+            "completed": sum(1 for item in past if (item.get("outcome") or "").strip().lower() not in ("", "open", "unknown")),
+            "lessons_available": sum(1 for item in past if (item.get("lesson") or "").strip()),
+            "won": won,
+            "lost": lost,
+            "open": max(0, len(past) - won - lost),
+            "high_risk": high_risk,
+            "high_risk_note": "Counted with the same keyword-signal rules as live analysis, using stored objections. Ratings are not saved separately on each record.",
+            "value_sum": sum(amounts) if amounts else None,
+            "value_count": len(amounts),
+            "value_unparsed": unparsed,
+            "recent": recent,
+            "alerts": alerts[:6],
+        }
+
+    def risk_insights(self):
+        past = self.all()
+        buckets = []
+        for key, label in SIGNAL_LABELS:
+            matches = [item for item in past if detect_signals(item).get(key)]
+            buckets.append({
+                "key": key,
+                "label": label,
+                "count": len(matches),
+                "percent": int(round((len(matches) / len(past) * 100))) if past else 0,
+                "examples": [item.get("company") or "Stored deal" for item in matches[:4]],
+            })
+        by_risk = {"High": 0, "Medium": 0, "Low": 0}
+        for item in past:
+            by_risk[self.estimate_risk(item)] += 1
+        return {
+            "total": len(past),
+            "by_risk": by_risk,
+            "buckets": buckets,
+            "note": "These counts come from keyword signals in retained deal text. They are not a separate scoring model.",
+        }
+
+    def estimate_risk(self, deal):
+        signals = detect_signals(deal)
+        risks = [name for name, present in signals.items() if present]
+        health = max(48, 82 - len(risks) * 9)
+        if health < 60:
+            return "High"
+        if health < 75:
+            return "Medium"
+        return "Low"
+
+    @staticmethod
+    def _parse_money(value):
+        if value is None:
+            return None
+        digits = re.sub(r"[^\d.]", "", str(value))
+        if not digits:
+            return None
+        try:
+            return float(digits)
+        except ValueError:
+            return None
 
     def _recall_local(self, deal):
         """Score local history against the current deal and explain each match."""
@@ -237,6 +355,7 @@ class HindsightMemory:
         outcome = (deal.get("outcome") or "").strip() or "Open"
         return {
             "company": deal.get("company") or "",
+            "expected_outcome": deal.get("expected_outcome") or "",
             "customer": deal.get("customer") or deal.get("company") or "",
             "industry": deal.get("industry") or "",
             "deal_value": deal.get("deal_value") or "",
@@ -281,6 +400,9 @@ class HindsightMemory:
     def _append_local(self, record):
         items = self._load_local()
         items.append(record)
+        self._write_local(items)
+
+    def _write_local(self, items):
         self._local_path.parent.mkdir(parents=True, exist_ok=True)
         self._local_path.write_text(json.dumps(items, indent=2), encoding="utf-8")
 

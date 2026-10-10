@@ -112,9 +112,13 @@ templates/
 
 Contains the HTML pages used by the application.
 
-index.html - Main application page
-deal.html - Deal information and analysis page
-hindsight.html - Hindsight memory page
+base.html - Shared navbar and page shell
+index.html - Overview dashboard
+analyze.html - Deal analysis form
+deal.html - Analysis results
+history.html - Retained deal history
+hindsight.html - Hindsight memory
+insights.html - Risk signal summary
 static/css/style.css
 
 Contains the styling for the web application.
@@ -213,4 +217,4 @@ Developed as a team project for an AI Agent Hackathon.
 
 📄 License
 
-This project is developed for educational and hackathon purposes
+This project is developed for educational and hackathon purposes.gi

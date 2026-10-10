@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Deal History | DealLens{% endblock %}
+{% block content %}
+  <header class="page-head">
+    <p class="kicker">Deal History</p>
+    <h1>Retained deal records</h1>
+    <p>Every row is a record already stored in memory. Signal risk is estimated from stored objections using the same rules as live analysis.</p>
+  </header>
+
+  {% if memory_error %}
+  <div class="notice"><strong>Memory status</strong><br>{{ memory_error }}</div>
+  {% endif %}
+
+  <article class="card">
+    {% if deals %}
+    <div class="history-controls">
+      <input id="history-search" type="search" placeholder="Search saved deals">
+      <select id="history-filter"><option value="">All outcomes</option><option value="Won">Won</option><option value="Lost">Lost</option><option value="Open">Open</option><option value="Recovered">Recovered</option></select>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Industry</th>
+            <th>Value</th>
+            <th>Outcome</th>
+            <th>Signal risk</th>
+            <th>Recorded</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in deals %}
+          <tr data-history-row data-search="{{ item.company }} {{ item.customer }} {{ item.industry }}" data-outcome="{{ item.outcome }}">
+            <td>{{ item.company or "Unnamed deal" }}<div class="muted">{{ item.customer }}</div></td>
+            <td>{{ item.industry or "—" }}</td>
+            <td>{{ item.deal_value or "—" }}</td>
+            <td><span class="badge {% if item.outcome in ['Won', 'Recovered'] %}badge-won{% elif item.outcome == 'Lost' %}badge-lost{% else %}badge-open{% endif %}">{{ item.outcome or "Unknown" }}</span></td>
+            <td><span class="badge badge-{{ item.risk|lower }}">{{ item.risk }}</span></td>
+            <td>{{ item.created_at or "—" }}</td>
+            <td><a class="text-link" href="{{ url_for('history_detail', document_id=item.document_id) }}">View record</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">No history yet. Analyze a deal to retain the first record.</p>
+    {% endif %}
+  </article>
+{% endblock %}

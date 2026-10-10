@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{% if record %}{{ record.company }} | Deal History{% else %}Record not found | DealLens{% endif %}{% endblock %}
+{% block content %}
+  {% if record %}
+  <header class="page-head">
+    <p class="kicker">Recorded deal</p>
+    <h1>{{ record.company or "Unnamed deal" }}</h1>
+    <p>Historical record retained on {{ record.created_at or "an unknown date" }}. Outcomes below are stored facts, not current predictions.</p>
+  </header>
+  {% if memory_error %}<div class="error"><strong>Could not save the outcome</strong><br>{{ memory_error }}</div>{% endif %}
+  <section class="card stack">
+    <div class="detail-row"><span>Recorded outcome</span><strong>{{ record.outcome or "Unknown" }}</strong></div>
+    <div class="detail-row"><span>Deal objective</span><p>{{ record.expected_outcome or record.requirements or "Not recorded" }}</p></div>
+    <div class="detail-row"><span>What happened</span><p>{{ record.situation or "No narrative stored." }}</p></div>
+    <div class="detail-row"><span>Lessons learned</span><p>{{ record.lesson or "No lesson was recorded." }}</p></div>
+    <div class="detail-row"><span>Stored risk signal</span><span class="badge badge-{{ record.risk|lower }}">{{ record.risk }}</span></div>
+  </section>
+  {% if request.args.get('saved') %}<div class="notice success-notice"><strong>Outcome recorded</strong><br>This confirmed result and lesson can now inform future deal recall.</div>{% endif %}
+  <section class="card outcome-form">
+    <p class="tag">Learn from the outcome</p>
+    <h2>Record what actually happened</h2>
+    <p class="hint">These are confirmed historical facts. They remain separate from the original expected outcome.</p>
+    <form action="{{ url_for('record_deal_outcome', document_id=record.document_id) }}" method="post">
+      <label>Actual outcome<select name="outcome" required><option value="">Select confirmed outcome</option>{% for value in ['Won','Lost','Stalled','Recovered'] %}<option value="{{ value }}" {% if record.actual_outcome == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+      <label>Actual lesson learned<textarea name="lesson" required placeholder="What should the team remember next time?">{{ record.actual_lesson or '' }}</textarea></label>
+      <label>Difference between expectation and result <span class="optional">Optional</span><textarea name="expectation_gap" placeholder="What differed from the expected outcome?">{{ record.expectation_gap or '' }}</textarea></label>
+      <button class="btn" type="submit">Save confirmed outcome</button>
+    </form>
+  </section>
+  <p class="back-link"><a class="text-link" href="{{ url_for('history') }}">← Back to Deal History</a></p>
+  {% else %}
+  <header class="page-head"><p class="kicker">Deal History</p><h1>Record not found</h1><p>The requested historical record is no longer available.</p></header>
+  <a class="btn btn-secondary" href="{{ url_for('history') }}">Back to Deal History</a>
+  {% endif %}
+{% endblock %}

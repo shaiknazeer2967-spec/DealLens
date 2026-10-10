@@ -18,6 +18,7 @@ SIGNAL_LABELS = (
 
 DEAL_FIELDS = (
     "company",
+    "expected_outcome",
     "deal_value",
     "customer",
     "industry",
@@ -82,7 +83,147 @@ def analyze_deal(deal, recalled):
         "decision": decision,
         "memory_impact": memory_impact,
         "confidence": "High" if len(similar) >= 2 else "Moderate" if similar else "Early signal",
+        "summary": deal_summary(deal),
+        "problems": build_problems(deal, signals),
+        "financial": financial_facts(deal),
+        "missing": missing_fields(deal),
+        "memory_connection": memory_connection(deal, similar),
+        "health_note": "Signal health is a keyword heuristic from objections and recalled deals, not a calibrated probability.",
     }
+
+
+def deal_summary(deal):
+    """Two or three sentences built only from submitted fields."""
+    company = (deal.get("company") or "This counterparty").strip()
+    expected = (deal.get("expected_outcome") or "").strip()
+    value = (deal.get("deal_value") or "").strip()
+    parts = [f"{company} is being reviewed as a proposed business deal"]
+    if value:
+        parts.append(f"at a stated value of {value}")
+    first = " ".join(parts) + "."
+
+    sentences = [first]
+    objections = (deal.get("objections") or "").strip()
+    competitor = (deal.get("competitor") or "").strip()
+    if objections:
+        sentences.append(f"The concerns captured in this analysis are: {objections}.")
+    if competitor:
+        sentences.append(f"A named alternative in the evaluation is {competitor}.")
+    elif (deal.get("situation") or "").strip() and len(sentences) < 3:
+        situation = " ".join((deal.get("situation") or "").split())
+        if len(situation) > 220:
+            situation = situation[:217] + "..."
+        sentences.append(situation)
+    if expected and len(sentences) < 3:
+        sentences.append(f"The team expects to achieve: {expected}.")
+    return " ".join(sentences[:3])
+
+
+PROBLEM_COPY = {
+    "pricing": {
+        "why": "A stated price concern often means the buyer is not yet convinced of value, not only that the budget is too low.",
+        "impact": "Leading with a discount can train the evaluation to compare list price instead of delivery, margin, and outcomes.",
+    },
+    "competition": {
+        "why": "A competitor in the process can set the criteria before this team has framed the requirements that matter.",
+        "impact": "Matching the other vendor on price without a clear fit story repeats losses already stored in memory.",
+    },
+    "implementation": {
+        "why": "Time-to-value and rollout effort are frequent hidden decision criteria in retained deals.",
+        "impact": "Vague delivery plans let a cheaper or 'faster' alternative win even when product fit is weaker.",
+    },
+    "security": {
+        "why": "Security and compliance reviews can stall an otherwise agreed commercial path.",
+        "impact": "A late review can block the economic buyer after price and scope already look settled.",
+    },
+    "decision": {
+        "why": "If the economic buyer and approval path are unclear, later work may not reach the person who can sign.",
+        "impact": "Deals stall in procurement or get reopened when a new stakeholder arrives late.",
+    },
+}
+
+
+def build_problems(deal, signals):
+    problems = []
+    for key, label in SIGNAL_LABELS:
+        if not signals.get(key):
+            continue
+        copy = PROBLEM_COPY[key]
+        problems.append({
+            "title": label,
+            "why": copy["why"],
+            "impact": copy["impact"],
+            "evidence": _problem_evidence(deal, key),
+        })
+    return problems
+
+
+def _problem_evidence(deal, key):
+    bits = []
+    objections = (deal.get("objections") or "").strip()
+    situation = (deal.get("situation") or "").strip()
+    competitor = (deal.get("competitor") or "").strip()
+    requirements = (deal.get("requirements") or "").strip()
+    if key == "pricing" and objections:
+        bits.append(objections)
+    if key == "competition" and competitor:
+        bits.append(f"Competitor named: {competitor}")
+    elif key == "competition" and objections:
+        bits.append(objections)
+    if key == "implementation" and (requirements or objections):
+        bits.append(requirements or objections)
+    if key == "security" and (requirements or objections):
+        bits.append(requirements or objections)
+    if key == "decision" and (situation or objections):
+        bits.append(objections or situation[:180])
+    if not bits and situation:
+        bits.append(situation[:180])
+    return bits[0] if bits else "Flagged from keywords in the submitted deal text."
+
+
+def financial_facts(deal):
+    rows = []
+    mapping = (
+        ("Deal value (as entered)", "deal_value"),
+        ("Commercial / negotiation notes", "negotiation"),
+        ("Named competitor", "competitor"),
+        ("Stated requirements", "requirements"),
+    )
+    for label, key in mapping:
+        value = (deal.get(key) or "").strip()
+        rows.append({"label": label, "value": value or "Not provided in this submission"})
+    return rows
+
+
+def missing_fields(deal):
+    labels = {
+        "competitor": "Named competitor",
+        "objections": "Concerns / objections",
+        "requirements": "Customer requirements",
+        "negotiation": "Commercial notes",
+        "situation": "Meeting notes",
+    }
+    missing = [label for key, label in labels.items() if not (deal.get(key) or "").strip()]
+    if (deal.get("outcome") or "Open").strip() in ("", "Open"):
+        missing.append("Closed outcome (still open)")
+    return missing
+
+
+def memory_connection(deal, similar):
+    if not similar:
+        return ""
+    item = similar[0]
+    company = item.get("company") or "a previous deal"
+    why = item.get("why_similar") or "overlapping deal context"
+    outcome = item.get("outcome") or "an recorded outcome"
+    lesson = item.get("lesson") or ""
+    text = (
+        f"Memory connection: {company} was recalled because {why.lower()}. "
+        f"That deal's recorded outcome was {outcome}."
+    )
+    if lesson:
+        text += f" The lesson kept from that record: {lesson}"
+    return text
 
 
 def reflect_on_history(deal, similar, signals):
