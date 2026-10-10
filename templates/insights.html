@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Risk Insights | DealLens{% endblock %}
+{% block content %}
+  <header class="page-head">
+    <p class="kicker">Risk Insights</p>
+    <h1>Where risk signals appear in memory</h1>
+    <p>{{ insights.note }}</p>
+  </header>
+
+  {% if memory_error %}
+  <div class="notice"><strong>Memory status</strong><br>{{ memory_error }}</div>
+  {% endif %}
+
+  <section class="kpi-grid">
+    <article class="card kpi">
+      <p class="label">Stored deals</p>
+      <p class="value">{{ insights.total }}</p>
+    </article>
+    <article class="card kpi">
+      <p class="label">High</p>
+      <p class="value">{{ insights.by_risk.High }}</p>
+    </article>
+    <article class="card kpi">
+      <p class="label">Medium</p>
+      <p class="value">{{ insights.by_risk.Medium }}</p>
+    </article>
+    <article class="card kpi">
+      <p class="label">Low</p>
+      <p class="value">{{ insights.by_risk.Low }}</p>
+    </article>
+  </section>
+
+  <article class="card">
+    <h2>Signal frequency</h2>
+    <p class="hint">Each bar is the number of retained deals whose text matched that theme.</p>
+    {% for bucket in insights.buckets %}
+    <div class="bar-row">
+      <div>{{ bucket.label }}</div>
+      <div class="bar"><span style="width: {{ bucket.percent }}%"></span></div>
+      <div>{{ bucket.count }}</div>
+    </div>
+    {% if bucket.examples %}
+    <p class="hint">Examples: {{ bucket.examples|join(', ') }}</p>
+    {% endif %}
+    {% else %}
+    <p class="empty">No retained deals to summarize.</p>
+    {% endfor %}
+  </article>
+{% endblock %}

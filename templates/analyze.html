@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Analyze Deal | DealLens{% endblock %}
+{% block content %}
+  <header class="page-head form-page-head">
+    <p class="kicker">New deal analysis</p>
+    <h1>Bring context. Leave with clarity.</h1>
+    <p>Start with the essentials. DealLens will assess the submitted context and compare it with recorded experience where relevant.</p>
+  </header>
+
+  {% if memory_error %}
+  <div class="notice"><strong>Hindsight note</strong><br>{{ memory_error }}</div>
+  {% endif %}
+
+  <form class="card deal-form-panel" action="{{ url_for('deal') }}" method="post" data-analyze>
+    <section class="form-section compact-form">
+      <h2>Deal details</h2>
+      <p class="hint">Three short inputs are required. Deal value is optional.</p>
+      <div class="form-grid">
+        <label>Deal name<input name="company" value="{{ form_data.get('company', '') }}" required placeholder="e.g. Northstar rollout"></label>
+        <label>Expected outcome<input name="expected_outcome" value="{{ form_data.get('expected_outcome', '') }}" required placeholder="e.g. Reduce onboarding time"></label>
+        <label class="full">Deal description<textarea name="situation" required placeholder="What is being proposed, who is involved, and any known concerns?">{{ form_data.get('situation', '') }}</textarea></label>
+        <label>Deal value <span class="optional">Optional</span><input name="deal_value" value="{{ form_data.get('deal_value', '') }}" placeholder="e.g. $120,000"></label>
+      </div>
+    </section>
+    <button class="btn" type="submit"><span class="btn-label">Analyze Deal</span><span class="btn-loading" aria-hidden="true">Analyzing…</span></button>
+  </form>
+{% endblock %}

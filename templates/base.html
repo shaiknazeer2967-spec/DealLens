@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}DealLens{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="deallens-space">
+  <div class="starfield" aria-hidden="true"></div>
+  <div class="app-main">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('home') }}">
+        <span class="brand-mark">DL</span>
+        <span class="brand-copy">
+          <strong>DealLens</strong>
+          <small>Deal Intelligence</small>
+        </span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+      <nav id="primary-nav" class="primary-nav" aria-label="Primary">
+        <a href="{{ url_for('home') }}" class="{% if nav_path == '/' %}is-active{% endif %}">Overview</a>
+        <a href="{{ url_for('analyze') }}" class="{% if nav_path in ['/analyze', '/deal'] %}is-active{% endif %}">Analyze Deal</a>
+        <a href="{{ url_for('history') }}" class="{% if nav_path == '/history' or nav_path.startswith('/history/') %}is-active{% endif %}">Deal History</a>
+        <a href="{{ url_for('hindsight') }}" class="{% if nav_path == '/hindsight' %}is-active{% endif %}">Hindsight Memory</a>
+      </nav>
+      <div class="status-chip" title="Memory source">
+        <span class="status-dot {% if memory_ready %}ok{% else %}warn{% endif %}"></span>
+        <span>{% if memory_ready %}Hindsight connected{% else %}Local memory{% endif %}</span>
+        <span class="status-count" aria-label="{{ memory_count }} retained deals">{{ memory_count }}</span>
+      </div>
+    </div>
+  </header>
+  <main class="shell">
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  </div>
+</body>
+</html>

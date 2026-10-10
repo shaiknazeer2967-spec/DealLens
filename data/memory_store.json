@@ -103,5 +103,52 @@
     "lesson": "For apple, lead with a quantified ROI and implementation plan before any discount conversation. 3 similar win(s) used that framing; 1 similar loss(es) leaned on price cuts.",
     "created_at": "2026-09-30T15:59:00.133840+00:00",
     "document_id": "deal-apple-20260930155900"
+  },
+  {
+    "company": "apple",
+    "customer": "apple",
+    "industry": "electronic gadjets",
+    "deal_value": "600000",
+    "situation": "same as mentioned",
+    "objections": "price, competetion",
+    "competitor": "samsung",
+    "requirements": "ROI",
+    "negotiation": "high competetion with samsung",
+    "outcome": "Open",
+    "lesson": "For apple, lead with a quantified ROI and implementation plan before any discount conversation. 3 similar win(s) used that framing; 1 similar loss(es) leaned on price cuts.",
+    "created_at": "2026-10-03T08:03:52.197416+00:00",
+    "document_id": "deal-apple-20261003080352"
+  },
+  {
+    "company": "enterprise software contract",
+    "expected_outcome": "Win a profitable contract and build a long-term client relationship.",
+    "customer": "enterprise software contract",
+    "industry": "",
+    "deal_value": "120,000",
+    "situation": "A potential client is considering a software solution for 500 employees. They want a discount, implementation within 30 days, and ongoing technical support. Our team must evaluate profitability, delivery feasibility, and the risk of offering too much discount.",
+    "objections": "",
+    "competitor": "",
+    "requirements": "",
+    "negotiation": "",
+    "outcome": "Open",
+    "lesson": "For enterprise software contract, lead with a quantified ROI and implementation plan before any discount conversation. 3 similar win(s) used that framing; 2 similar loss(es) leaned on price cuts.",
+    "created_at": "2026-10-10T08:38:26.685510+00:00",
+    "document_id": "deal-enterprise-software-contract-20261010083826"
+  },
+  {
+    "company": "amazon",
+    "expected_outcome": "profitability",
+    "customer": "amazon",
+    "industry": "",
+    "deal_value": "1000000",
+    "situation": "A large company wants to purchase our software for \u20b910,00,000. The client is requesting a 20% discount and one year of technical support. We need to decide whether the deal will remain profitable after support costs.",
+    "objections": "",
+    "competitor": "",
+    "requirements": "",
+    "negotiation": "",
+    "outcome": "Open",
+    "lesson": "For amazon, lead with a quantified ROI and implementation plan before any discount conversation. 3 similar win(s) used that framing; 1 similar loss(es) leaned on price cuts.",
+    "created_at": "2026-10-10T09:34:53.506891+00:00",
+    "document_id": "deal-amazon-20261010093453"
   }
 ]

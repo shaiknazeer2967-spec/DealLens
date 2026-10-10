@@ -1,0 +1,32 @@
+[
+  {
+    "id": "6fd1e763619f4633b5c9a3b4c426659f",
+    "name": "Shorter onboarding checklist",
+    "objective": "Help new users reach their first project sooner",
+    "change": "Replaced the seven-step setup with a guided three-step checklist",
+    "result": "Successful",
+    "learning": "A focused first action reduced setup friction; advanced options work better after activation.",
+    "demo": true,
+    "created_at": "2026-10-10T08:43:57.615517+00:00"
+  },
+  {
+    "id": "eab4fb7c4748400db521ba71c80803b9",
+    "name": "Annual-plan checkout prompt",
+    "objective": "Increase annual subscription adoption",
+    "change": "Added an annual-plan prompt before payment",
+    "result": "Unsuccessful",
+    "learning": "Presenting a long commitment before value is experienced created hesitation for new users.",
+    "demo": true,
+    "created_at": "2026-10-10T08:43:57.621915+00:00"
+  },
+  {
+    "id": "82fd7fe7e0a04d67a1a94e14bf6379e9",
+    "name": "Team invite reminder",
+    "objective": "Increase collaboration in the first week",
+    "change": "Sent an in-app reminder to invite a teammate on day three",
+    "result": "Inconclusive",
+    "learning": "The reminder was noticed, but the audience was too small to separate timing from product-fit effects.",
+    "demo": true,
+    "created_at": "2026-10-10T08:43:57.641580+00:00"
+  }
+]

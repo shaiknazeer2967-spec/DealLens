@@ -1,58 +1,131 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>DealLens – Intelligence Behind Every Deal</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <nav>
-    <a class="brand" href="/">Deal<span>Lens</span></a>
-    <a href="/hindsight">Hindsight Memory <b>{{ memory_count }}</b></a>
-  </nav>
-  <main class="hero">
-    <p class="eyebrow">INTELLIGENCE BEHIND EVERY DEAL</p>
-    <h1>Past deals make the<br><em>next decision clearer.</em></h1>
-    <p class="lead">DealLens remembers what happened in previous deals—then recalls similar experiences, extracts lessons, and supports the current decision. It does not pretend history is a guarantee.</p>
-    <ol class="cycle">
-      <li><span>01</span>Retain</li>
-      <li><span>02</span>Recall</li>
-      <li><span>03</span>Reflect</li>
-      <li><span>04</span>Decide</li>
+{% extends "base.html" %}
+{% block title %}Overview | DealLens{% endblock %}
+{% block content %}
+  <header class="page-head hero-editorial">
+    <p class="kicker">Deal intelligence workspace</p>
+    <h1>Intelligence Behind <em>Every Deal</em></h1>
+    <p>Turn past deal experiences into actionable intelligence for better decisions.</p>
+    <a class="btn hero-cta" href="{{ url_for('analyze') }}">Analyze a New Deal</a>
+  </header>
+
+  {% if memory_error %}
+  <div class="notice"><strong>Memory status</strong><br>{{ memory_error }}</div>
+  {% endif %}
+
+  <section class="memory-overview" aria-labelledby="memory-overview-title">
+    <div class="section-heading memory-overview-heading">
+      <div>
+        <p class="kicker">Hindsight Memory</p>
+        <h2 id="memory-overview-title">How Hindsight Memory Informs This Deal</h2>
+        <p class="hint">A transparent four-stage workflow, grounded in the records your team has actually saved.</p>
+      </div>
+      <a class="text-link" href="{{ url_for('hindsight') }}">Explore memory →</a>
+    </div>
+    <ol class="memory-stages">
+      <li class="memory-stage">
+        <span class="stage-index">01</span>
+        <p class="stage-label">RETAIN · Store experience</p>
+        <h3>{{ stats.total }} saved deal{{ 's' if stats.total != 1 else '' }}</h3>
+        {% if stats.recent %}
+        <ul class="stage-records">
+          {% for item in stats.recent[:2] %}
+          <li><strong>{{ item.company or "Unnamed deal" }}</strong><span>{{ item.outcome or "Unknown outcome" }}</span></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p>No saved deal records yet. Your first analysis will be retained here.</p>
+        {% endif %}
+        <a href="{{ url_for('history') }}">View saved records</a>
+      </li>
+      <li class="memory-stage">
+        <span class="stage-index">02</span>
+        <p class="stage-label">RECALL · Find experience</p>
+        <h3>Relevant history, when found</h3>
+        <p>Each analysis searches saved deal experience for shared concerns and context. No match is presented as a match.</p>
+        <a href="{{ url_for('analyze') }}">Start an analysis</a>
+      </li>
+      <li class="memory-stage">
+        <span class="stage-index">03</span>
+        <p class="stage-label">REFLECT · Extract lessons</p>
+        <h3>{{ stats.lessons_available }} recorded lesson{{ 's' if stats.lessons_available != 1 else '' }}</h3>
+        <p>Lessons appear with their source deal in the analysis, so historical evidence stays distinguishable from interpretation.</p>
+        <a href="{{ url_for('hindsight') }}">Review lessons</a>
+      </li>
+      <li class="memory-stage">
+        <span class="stage-index">04</span>
+        <p class="stage-label">RECOMMEND · Apply the lesson</p>
+        <h3>Action for the deal at hand</h3>
+        <p>Recommendations connect current deal signals to recalled experience where available, or state when memory is absent.</p>
+        <a href="{{ url_for('analyze') }}">Analyze a deal</a>
+      </li>
     </ol>
-    <section class="panel form-panel">
-      <h2>Analyze a current deal</h2>
-      <p>Enter the live situation. DealLens searches stored history, shows why past deals are similar, and recommends an action with the evidence behind it.</p>
-      {% if memory_error %}
-      <div class="error"><strong>Hindsight cloud note</strong><br>{{ memory_error }}<br><small>Local memory still runs. Cloud recall needs a valid `.env` key and a restart.</small></div>
+  </section>
+
+  <section class="kpi-grid">
+    <article class="card kpi">
+      <p class="label">Total recorded deals</p>
+      <p class="value">{{ stats.total }}</p>
+      <p class="sub">Records currently in memory</p>
+    </article>
+    <article class="card kpi">
+      <p class="label">High-risk deals</p>
+      <p class="value">{{ stats.high_risk }}</p>
+      <p class="sub">{{ stats.high_risk_note }}</p>
+    </article>
+    <article class="card kpi">
+      <p class="label">Completed with outcomes</p>
+      <p class="value">{{ stats.completed }}</p>
+      <p class="sub">Confirmed records only; open analyses are excluded</p>
+    </article>
+    <article class="card kpi">
+      <p class="label">Saved lesson notes</p>
+      <p class="value">{{ stats.lessons_available }}</p>
+      <p class="sub">Memory records with a stored lesson note</p>
+    </article>
+  </section>
+
+  <section class="split">
+    <article class="card">
+      <div class="section-heading"><div><h2>Recent deal analyses</h2>
+      <p class="hint">Latest retained records, newest first.</p>
+      </div><a class="btn btn-secondary" href="{{ url_for('analyze') }}">Analyze a new deal</a></div>
+      {% if stats.recent %}
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>Company</th><th>Value</th><th>Outcome</th><th>Signal risk</th></tr>
+          </thead>
+          <tbody>
+            {% for item in stats.recent %}
+            <tr>
+              <td>{{ item.company or "Unnamed deal" }}</td>
+              <td>{{ item.deal_value or "Not provided" }}</td>
+              <td><span class="badge {% if item.outcome in ['Won', 'Recovered'] %}badge-won{% elif item.outcome == 'Lost' %}badge-lost{% else %}badge-open{% endif %}">{{ item.outcome or "Unknown" }}</span></td>
+              <td><span class="badge badge-{{ item.risk|lower }}">{{ item.risk }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="empty">No retained deals yet. Analyze a deal to populate this list.</p>
       {% endif %}
-      <form action="/deal" method="post">
-        <div class="grid">
-          <label>Company<input name="company" value="{{ form_data.get('company', '') }}" placeholder="e.g. Company C" required></label>
-          <label>Deal value<input name="deal_value" value="{{ form_data.get('deal_value', '') }}" placeholder="e.g. $250,000" required></label>
-          <label>Customer / account<input name="customer" value="{{ form_data.get('customer', '') }}" placeholder="e.g. Company C procurement" required></label>
-          <label>Industry<input name="industry" value="{{ form_data.get('industry', '') }}" placeholder="e.g. Healthcare" required></label>
+    </article>
+    <article class="card">
+      <h2>Latest risk alerts</h2>
+      <p class="hint">From stored objections and outcomes, not a live monitoring feed.</p>
+      <div class="alert-list">
+        {% for item in stats.alerts %}
+        <div class="alert-item">
+          <span class="badge badge-{{ item.risk|lower }}">{{ item.risk }}</span>
+          <strong> {{ item.company }}</strong>
+          <span class="muted"> · {{ item.outcome }}</span>
+          <p>{{ item.detail or "No objection text stored." }}</p>
         </div>
-        <div class="grid">
-          <label>Objections<input name="objections" value="{{ form_data.get('objections', '') }}" placeholder="e.g. Price, implementation time"></label>
-          <label>Competitor<input name="competitor" value="{{ form_data.get('competitor', '') }}" placeholder="e.g. cheaper alternative"></label>
-          <label>Customer requirements<input name="requirements" value="{{ form_data.get('requirements', '') }}" placeholder="e.g. ROI proof, 8-week go-live"></label>
-          <label>Outcome (if known)
-            <select name="outcome">
-              <option value="Open" {% if form_data.get('outcome', 'Open') == 'Open' %}selected{% endif %}>Open — current deal</option>
-              <option value="Won" {% if form_data.get('outcome') == 'Won' %}selected{% endif %}>Won</option>
-              <option value="Lost" {% if form_data.get('outcome') == 'Lost' %}selected{% endif %}>Lost</option>
-              <option value="Stalled" {% if form_data.get('outcome') == 'Stalled' %}selected{% endif %}>Stalled</option>
-            </select>
-          </label>
-        </div>
-        <label>Negotiation notes<input name="negotiation" value="{{ form_data.get('negotiation', '') }}" placeholder="What has already been offered or refused?"></label>
-        <label>Meeting notes / current deal situation<textarea name="situation" placeholder="Include objections, competitor pressure, implementation concerns, and decision blockers..." required>{{ form_data.get('situation', '') }}</textarea></label>
-        <button type="submit">Recall history and analyze →</button>
-      </form>
-    </section>
-  </main>
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
-</html>
+        {% else %}
+        <p class="empty">No stored objections or losses to surface yet.</p>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+{% endblock %}
